@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -7,6 +8,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HtmlAnalyzer {
 
@@ -27,7 +30,7 @@ public class HtmlAnalyzer {
             // Verificando o status da conexão
             int status = connection.getResponseCode();
             if (status != 200) {
-                System.out.println("URL connection error");
+                System.out.println("Erro na conexão: " + status);
                 return;
             }
 
@@ -54,20 +57,26 @@ public class HtmlAnalyzer {
                         writer.write(line);
                         writer.newLine();
 
-                        // Verifica se é uma tag de abertura
-                        if (line.matches("<[a-zA-Z]+>")) {
-                            String tag = line.replaceAll("[<>]", "");
-                            tagStack.push(tag);
-                        }
-                        // Verifica se é uma tag de fechamento
-                        else if (line.matches("</[a-zA-Z]+>")) {
-                            String tag = line.replaceAll("[</>]", "");
-                            if (tagStack.isEmpty() || !tagStack.peek().equals(tag)) {
-                                malformed = true;
-                                break;
+                        // Regex para identificar tags HTML de forma mais robusta
+                        Pattern tagPattern = Pattern.compile("<([a-zA-Z][a-zA-Z0-9]*)[^>]*>|</([a-zA-Z][a-zA-Z0-9]*)>");
+                        Matcher matcher = tagPattern.matcher(line);
+
+                        // Verifica se a linha contém uma tag
+                        if (matcher.find()) {
+                            // Verifica se é uma tag de abertura
+                            if (matcher.group(1) != null) {
+                                tagStack.push(matcher.group(1));
+                            } 
+                            // Verifica se é uma tag de fechamento
+                            else if (matcher.group(2) != null) {
+                                String tag = matcher.group(2);
+                                if (tagStack.isEmpty() || !tagStack.peek().equals(tag)) {
+                                    malformed = true;
+                                    break;
+                                }
+                                tagStack.pop();
                             }
-                            tagStack.pop();
-                        }
+                        } 
                         // Caso seja um trecho de texto
                         else {
                             int depth = tagStack.size();
@@ -84,17 +93,17 @@ public class HtmlAnalyzer {
 
                 // Verificações finais
                 if (malformed || !tagStack.isEmpty()) {
-                    System.out.println("malformed HTML");
+                    System.out.println("HTML malformado.");
                 } else if (deepestText != null) {
                     System.out.println("Texto mais profundo: " + deepestText);
                 } else {
-                    System.out.println("No text found");
+                    System.out.println("Nenhum texto encontrado.");
                 }
             }
         } catch (MalformedURLException e) {
-            System.out.println("URL inválida");
+            System.out.println("URL inválida.");
         } catch (IOException e) {
-            System.out.println("Erro na conexão ou leitura da URL");
+            System.out.println("Erro na conexão ou leitura da URL.");
         }
     }
 }
