@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -30,7 +29,7 @@ public class HtmlAnalyzer {
             // Verificando o status da conexão
             int status = connection.getResponseCode();
             if (status != 200) {
-                System.out.println("Erro na conexão: " + status);
+                System.out.println("Erro na conexão, código de status: " + status);
                 return;
             }
 
