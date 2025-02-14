@@ -1,4 +1,6 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -39,45 +41,58 @@ public class HtmlAnalyzer {
         int maxDepth = 0;  // Profundidade máxima encontrada
         boolean malformed = false;  // Indicador de HTML malformado
 
-        // Analisando linha por linha do HTML
-        while ((line = reader.readLine()) != null) {
-          line = line.trim();
-          if (line.isEmpty()) {
-            continue; // Ignora linhas vazias
+        // Criando um BufferedWriter para salvar o HTML em um arquivo
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("saida.html"))) {
+          // Lê o conteúdo HTML linha por linha
+          while ((line = reader.readLine()) != null) {
+            // Salva no arquivo "saida.html"
+            writer.write(line);
+            writer.newLine();
+            
+            // Processa o conteúdo (no seu caso, você está procurando texto dentro das tags)
+            line = line.trim();
+            if (line.isEmpty()) {
+              continue; // Ignora linhas vazias
+            }
+
+            // Verifica se é uma tag de abertura (ex: <tag>)
+            if (line.matches("<[a-zA-Z]+>")) {
+              String tag = line.replaceAll("[<>]", "");
+              tagStack.push(tag);  // Empilha a tag de abertura
+            }
+            // Verifica se é uma tag de fechamento (ex: </tag>)
+            else if (line.matches("</[a-zA-Z]+>")) {
+              String tag = line.replaceAll("[</>]", "");
+              if (tagStack.isEmpty() || !tagStack.peek().equals(tag)) {
+                malformed = true;  // HTML malformado (tags de fechamento não correspondem)
+                break;
+              }
+              tagStack.pop();  // Remove a tag de abertura correspondente
+            }
+            // Caso seja um trecho de texto dentro das tags
+            else {
+              int depth = tagStack.size();  // Profundidade atual das tags
+              if (depth > maxDepth) {
+                maxDepth = depth;  // Atualiza a profundidade máxima
+                deepestText = line;  // Atualiza o texto mais profundo
+              }
+            }
           }
 
-          // Verifica se é uma tag de abertura (ex: <tag>)
-          if (line.matches("<[a-zA-Z]+>")) {
-            String tag = line.replaceAll("[<>]", "");
-            tagStack.push(tag);  // Empilha a tag de abertura
+          // Verificações finais após analisar todo o HTML
+          if (malformed || !tagStack.isEmpty()) {
+            System.out.println("HTML malformado. Algumas tags não foram fechadas corretamente.");
+          } else if (deepestText != null) {
+            System.out.println("Texto mais profundo encontrado: ");
+            System.out.println(deepestText);
+          } else {
+            System.out.println("Nenhum texto encontrado dentro das tags.");
           }
-          // Verifica se é uma tag de fechamento (ex: </tag>)
-          else if (line.matches("</[a-zA-Z]+>")) {
-            String tag = line.replaceAll("[</>]", "");
-            if (tagStack.isEmpty() || !tagStack.peek().equals(tag)) {
-              malformed = true;  // HTML malformado (tags de fechamento não correspondem)
-              break;
-            }
-            tagStack.pop();  // Remove a tag de abertura correspondente
-          }
-          // Caso seja um trecho de texto dentro das tags
-          else {
-            int depth = tagStack.size();  // Profundidade atual das tags
-            if (depth > maxDepth) {
-              maxDepth = depth;  // Atualiza a profundidade máxima
-              deepestText = line;  // Atualiza o texto mais profundo
-            }
-          }
-        }
 
-        // Verificações finais após analisar todo o HTML
-        if (malformed || !tagStack.isEmpty()) {
-          System.out.println("HTML malformado. Algumas tags não foram fechadas corretamente.");
-        } else if (deepestText != null) {
-          System.out.println("Texto mais profundo encontrado: ");
-          System.out.println(deepestText);
-        } else {
-          System.out.println("Nenhum texto encontrado dentro das tags.");
+          System.out.println("Conteúdo HTML salvo em 'saida.html'");
+
+        } catch (IOException e) {
+          System.out.println("Erro ao salvar o conteúdo HTML em um arquivo: " + e.getMessage());
         }
       }
     } catch (MalformedURLException e) {
