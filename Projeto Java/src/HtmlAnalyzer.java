@@ -42,7 +42,7 @@ public class HtmlAnalyzer {
                     if (line.isEmpty()) {
                         continue; // Ignora linhas vazias
                     }
-                    
+
                     // Verifica se é uma tag de abertura
                     if (line.matches("<[a-zA-Z]+>")) {
                         String tag = line.replaceAll("[<>]", "");
@@ -69,7 +69,7 @@ public class HtmlAnalyzer {
 
                 // Verificações finais
                 if (malformed || !tagStack.isEmpty()) {
-                    System.out.println("Malformed HTML");
+                    System.out.println("malformed HTML");
                 } else if (deepestText != null) {
                     System.out.println(deepestText);
                 } else {
@@ -77,9 +77,9 @@ public class HtmlAnalyzer {
                 }
             }
         } catch (MalformedURLException e) {
-            System.out.println("Malformed URL: " + e.getMessage());
+            System.out.println("URL connection error");
         } catch (IOException e) {
-            System.out.println("URL connection error: " + e.getMessage());
+            System.out.println("URL connection error");
         }
     }
 }
