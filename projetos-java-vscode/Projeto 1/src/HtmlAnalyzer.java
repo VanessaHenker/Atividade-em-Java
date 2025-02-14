@@ -1,68 +1,44 @@
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Stack;
 
 public class HtmlAnalyzer {
+
   public static void main(String[] args) {
+    // Verifica se a URL foi passada como argumento
     if (args.length != 1) {
-      System.out.println("Usage: java HtmlAnalyzer <url>");
+      System.out.println("Usage: java HtmlAnalyzer <URL>");
       return;
     }
 
     String urlString = args[0];
+
     try {
+      // Cria a conexão com a URL
       URL url = new URL(urlString);
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("GET");
 
-      int status = connection.getResponseCode();
-      if (status != 200) {
+      // Verifica se a conexão foi bem-sucedida
+      int responseCode = connection.getResponseCode();
+      if (responseCode != 200) {
         System.out.println("URL connection error");
         return;
       }
 
+      // Lê o conteúdo HTML linha por linha
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       String line;
-      Stack<String> tagStack = new Stack<>();
-      String deepestText = null;
-      int maxDepth = 0;
-      boolean malformed = false;
-
       while ((line = reader.readLine()) != null) {
-        line = line.trim();
-        if (line.isEmpty())
-          continue;
-
-        if (line.matches("<[a-zA-Z]+>")) {
-          String tag = line.replaceAll("[<>]", "");
-          tagStack.push(tag);
-        } else if (line.matches("</[a-zA-Z]+>")) {
-          String tag = line.replaceAll("[</>]", "");
-          if (tagStack.isEmpty() || !tagStack.peek().equals(tag)) {
-            malformed = true;
-            break;
-          }
-          tagStack.pop();
-        } else {
-          int depth = tagStack.size();
-          if (depth > maxDepth) {
-            maxDepth = depth;
-            deepestText = line;
-          }
-        }
+        // Por enquanto, apenas exibe o HTML no console
+        System.out.println(line);
       }
       reader.close();
 
-      if (malformed || !tagStack.isEmpty()) {
-        System.out.println("malformed HTML");
-      } else if (deepestText != null) {
-        System.out.println(deepestText);
-      } else {
-        System.out.println("No text found");
-      }
-    } catch (Exception e) {
+    } catch (IOException e) {
+      // Trata erros de conexão
       System.out.println("URL connection error");
     }
   }
