@@ -13,18 +13,19 @@ import java.util.regex.Pattern;
 public class HtmlAnalyzer {
 
     public static void main(String[] args) {
-        // Verificação de argumento de linha de comando
-        if (args.length != 1) {
-            System.out.println("Usage: java HtmlAnalyzer <url>");
-            return;
-        }
+        // URL fixa para análise
+        String urlString = "https://axur-internship-2025.s3.amazonaws.com/";
 
-        String urlString = args[0];
         try {
             // Estabelecendo conexão com a URL
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+
+            // Adicionando o cabeçalho "User-Agent" para simular um navegador
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            connection.setRequestProperty("Referer", "https://axur-internship-2025.s3.amazonaws.com/"); // Referer
+            connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"); // Accept
 
             // Verificando o status da conexão
             int status = connection.getResponseCode();
